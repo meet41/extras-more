@@ -561,12 +561,26 @@ def test_login_failure_and_protected_route_denied():
 - Keep it stateless: all state is in MongoDB; scale horizontally by running multiple replicas.
 - Configure secrets via environment variables (e.g., `SECRET_KEY`, `MONGO_URL`) using Kubernetes Secrets or a secret manager.
 
-**How other services verify JWT tokens**
-Two common patterns:
+*How other services verify JWT tokens Two common patterns:*
 
-1) **Shared secret (HS256)**  
-   - Other services are configured with the same `SECRET_KEY` and
+Shared secret (HS256)
 
+Other services are configured with the same SECRET_KEY and verify tokens locally:
+validate signature
+validate exp
+read claims like sub (user) and role
+Simple, but secret distribution is sensitive.
+Asymmetric keys (recommended) (RS256/ES256)
+
+Auth service signs tokens with a private key.
+Other services verify using the public key (no need for the signing secret).
+Typically you also expose a JWKS endpoint so services can fetch rotating public keys.
+This is the standard approach for multi-service ecosystems.
+If you want, I can also:
+Add MongoDB dependency overrides for tests (so tests don’t need a real DB)
+Convert Q1/Q3 into a single “clean architecture” layout with routers/services/repositories
+Use RS256 + JWKS in Q3 (more realistic for microservices)
+Tell me which you prefer and whether you want one combined repo layout or three separate folders exactly as above.
 
 
 ## Question 1 — Secure Product Management API (JWT, admin-only delete, MongoDB)  
